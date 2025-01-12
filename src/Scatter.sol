@@ -20,7 +20,7 @@ contract Scatter {
 
     function scatterERC20Token(address token, address[] memory recipients, uint256[] memory amounts) external {
         for (uint256 i = 0; i < recipients.length; i++) {
-            IERC20(token).transfer(recipients[i], amounts[i]);
+            IERC20(token).transferFrom(msg.sender, recipients[i], amounts[i]);
         }
     }
 
