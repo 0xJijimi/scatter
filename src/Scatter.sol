@@ -5,11 +5,12 @@ import "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 /// @title Scatter
 /// @notice A contract for distributing native currency, ERC20, and ERC1155 tokens to multiple recipients
 /// @dev Uses ReentrancyGuardTransient for protection against reentrancy attacks
-contract Scatter is ReentrancyGuardTransient, Ownable {
+contract Scatter is ReentrancyGuardTransient, Ownable, Pausable {
     // Events emitted when tokens are scattered
     event NativeCurrencyScattered(address indexed sender, address[] recipients, uint256[] amounts);
     event ERC20Scattered(address indexed sender, address indexed token, address[] recipients, uint256[] amounts);
@@ -36,7 +37,7 @@ contract Scatter is ReentrancyGuardTransient, Ownable {
     /// @notice Distributes native currency to multiple recipients
     /// @param recipients Array of recipient addresses
     /// @param amounts Array of amounts to send to each recipient
-    function scatterNativeCurrency(address[] memory recipients, uint256[] memory amounts) external payable nonReentrant {
+    function scatterNativeCurrency(address[] memory recipients, uint256[] memory amounts) external payable nonReentrant whenNotPaused {
         require(recipients.length == amounts.length, ArrayLengthMismatch());
         require(recipients.length > 0, ArrayLengthMismatch());
         
@@ -70,7 +71,7 @@ contract Scatter is ReentrancyGuardTransient, Ownable {
     /// @param token Address of the ERC20 token contract
     /// @param recipients Array of recipient addresses
     /// @param amounts Array of token amounts to send to each recipient
-    function scatterERC20Token(address token, address[] memory recipients, uint256[] memory amounts) external nonReentrant {
+    function scatterERC20Token(address token, address[] memory recipients, uint256[] memory amounts) external nonReentrant whenNotPaused {
         require(recipients.length == amounts.length, ArrayLengthMismatch());
         require(recipients.length > 0, ArrayLengthMismatch());
         require(token != address(0), ZeroAddress());
@@ -108,7 +109,7 @@ contract Scatter is ReentrancyGuardTransient, Ownable {
         address[] memory recipients,
         uint256[] memory amounts,
         uint256[] memory ids
-    ) external nonReentrant {
+    ) external nonReentrant whenNotPaused {
         require(recipients.length == amounts.length && recipients.length == ids.length, ArrayLengthMismatch());
         require(recipients.length > 0, ArrayLengthMismatch());
         require(token != address(0), ZeroAddress());
@@ -191,5 +192,15 @@ contract Scatter is ReentrancyGuardTransient, Ownable {
             balances,
             ""
         );
+    }
+
+    /// @notice Pauses all token scattering operations
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    /// @notice Unpauses all token scattering operations
+    function unpause() external onlyOwner {
+        _unpause();
     }
 }

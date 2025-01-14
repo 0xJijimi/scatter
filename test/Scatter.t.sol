@@ -181,5 +181,59 @@ contract ScatterTest is Test, ERC1155Holder {
     //     assertEq(token1155.balanceOf(owner, 1), initialBalance + 50);
     // }
 
+    function testPauseUnpause() public {
+        vm.startPrank(owner);
+        
+        // Test pausing
+        scatter.pause();
+        assertTrue(scatter.paused());
+        
+        // Test unpausing
+        scatter.unpause();
+        assertFalse(scatter.paused());
+        
+        vm.stopPrank();
+    }
+
+    function testFailPauseNonOwner() public {
+        vm.prank(alice);
+        scatter.pause();
+    }
+
+    function testFailScatterWhilePaused() public {
+        // Setup test data
+        address[] memory recipients = new address[](1);
+        recipients[0] = bob;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 1 ether;
+        
+        // Pause the contract
+        vm.prank(owner);
+        scatter.pause();
+        
+        // Try to scatter while paused (should fail)
+        scatter.scatterNativeCurrency{value: 1 ether}(recipients, amounts);
+    }
+
+    function testFailERC20ScatterWhilePaused() public {
+        vm.startPrank(alice);
+        
+        address[] memory recipients = new address[](1);
+        recipients[0] = bob;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 100e18;
+        
+        token.approve(address(scatter), 100e18);
+        
+        // Pause the contract
+        vm.stopPrank();
+        vm.prank(owner);
+        scatter.pause();
+        
+        // Try to scatter while paused (should fail)
+        vm.prank(alice);
+        scatter.scatterERC20Token(address(token), recipients, amounts);
+    }
+
     receive() external payable {}
 } 
