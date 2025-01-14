@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 
-contract Scatter is ReentrancyGuard {
+contract Scatter is ReentrancyGuardTransient {
     event NativeCurrencyScattered(address indexed sender, address[] recipients, uint256[] amounts);
     event ERC20Scattered(address indexed sender, address indexed token, address[] recipients, uint256[] amounts);
     event ERC1155Scattered(address indexed sender, address indexed token, address[] recipients, uint256[] ids, uint256[] amounts);
