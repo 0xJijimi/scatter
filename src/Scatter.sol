@@ -21,18 +21,18 @@ contract Scatter is ReentrancyGuardTransient {
     uint256 public totalNativeScattered;
 
     function scatterNativeCurrency(address[] memory recipients, uint256[] memory amounts) external payable nonReentrant {
-        if (recipients.length != amounts.length) revert ArrayLengthMismatch();
-        if (recipients.length == 0) revert ArrayLengthMismatch();
+        require(recipients.length == amounts.length, ArrayLengthMismatch());
+        require(recipients.length > 0, ArrayLengthMismatch());
         
         uint256 totalAmount;
         for (uint256 i = 0; i < amounts.length; i++) {
             totalAmount += amounts[i];
         }
-        if (msg.value < totalAmount) revert InsufficientValue();
+        require(msg.value >= totalAmount, InsufficientValue());
 
         for (uint256 i = 0; i < recipients.length; i++) {
-            if (recipients[i] == address(0)) revert ZeroAddress();
-            if (amounts[i] == 0) revert ZeroAmount();
+            require(recipients[i] != address(0), ZeroAddress());
+            require(amounts[i] > 0, ZeroAmount());
             
             payable(recipients[i]).transfer(amounts[i]);
             totalNativeScattered += amounts[i];
@@ -42,13 +42,13 @@ contract Scatter is ReentrancyGuardTransient {
     }
 
     function scatterERC20Token(address token, address[] memory recipients, uint256[] memory amounts) external nonReentrant {
-        if (recipients.length != amounts.length) revert ArrayLengthMismatch();
-        if (recipients.length == 0) revert ArrayLengthMismatch();
-        if (token == address(0)) revert ZeroAddress();
+        require(recipients.length == amounts.length, ArrayLengthMismatch());
+        require(recipients.length > 0, ArrayLengthMismatch());
+        require(token != address(0), ZeroAddress());
 
         for (uint256 i = 0; i < recipients.length; i++) {
-            if (recipients[i] == address(0)) revert ZeroAddress();
-            if (amounts[i] == 0) revert ZeroAmount();
+            require(recipients[i] != address(0), ZeroAddress());
+            require(amounts[i] > 0, ZeroAmount());
             
             IERC20(token).transferFrom(msg.sender, recipients[i], amounts[i]);
             totalTokenScattered[token] += amounts[i];
@@ -63,13 +63,13 @@ contract Scatter is ReentrancyGuardTransient {
         uint256[] memory amounts,
         uint256[] memory ids
     ) external nonReentrant {
-        if (recipients.length != amounts.length || recipients.length != ids.length) revert ArrayLengthMismatch();
-        if (recipients.length == 0) revert ArrayLengthMismatch();
-        if (token == address(0)) revert ZeroAddress();
+        require(recipients.length == amounts.length && recipients.length == ids.length, ArrayLengthMismatch());
+        require(recipients.length > 0, ArrayLengthMismatch());
+        require(token != address(0), ZeroAddress());
 
         for (uint256 i = 0; i < recipients.length; i++) {
-            if (recipients[i] == address(0)) revert ZeroAddress();
-            if (amounts[i] == 0) revert ZeroAmount();
+            require(recipients[i] != address(0), ZeroAddress());
+            require(amounts[i] > 0, ZeroAmount());
             
             IERC1155(token).safeTransferFrom(msg.sender, recipients[i], ids[i], amounts[i], "");
             totalERC1155Scattered[token][ids[i]] += amounts[i];
@@ -84,15 +84,15 @@ contract Scatter is ReentrancyGuardTransient {
         uint256 id,
         uint256 amount
     ) external nonReentrant {
-        if (recipients.length == 0) revert ArrayLengthMismatch();
-        if (token == address(0)) revert ZeroAddress();
-        if (amount == 0) revert ZeroAmount();
+        require(recipients.length > 0, ArrayLengthMismatch());
+        require(token != address(0), ZeroAddress());
+        require(amount > 0, ZeroAmount());
 
         uint256[] memory amounts = new uint256[](recipients.length);
         uint256[] memory ids = new uint256[](recipients.length);
         
         for (uint256 i = 0; i < recipients.length; i++) {
-            if (recipients[i] == address(0)) revert ZeroAddress();
+            require(recipients[i] != address(0), ZeroAddress());
             
             IERC1155(token).safeTransferFrom(msg.sender, recipients[i], id, amount, "");
             amounts[i] = amount;
