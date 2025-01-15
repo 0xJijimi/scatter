@@ -149,37 +149,36 @@ contract ScatterTest is Test, ERC1155Holder {
         scatter.scatterNativeCurrency{value: 1 ether}(recipients, amounts);
     }
 
-    // TODO - fix
-    // function testWithdrawStuckETH() public {
-    //     // Send some ETH to the contract
-    //     (bool success,) = address(scatter).call{value: 1 ether}("");
-    //     require(success, "Transfer failed");
+    function testWithdrawStuckETH() public {
+        // Send some ETH to the contract
+        (bool success,) = address(scatter).call{value: 1 ether}("");
+        require(success, "Transfer failed");
 
-    //     uint256 initialBalance = owner.balance;
-    //     vm.prank(owner);
-    //     scatter.withdrawStuckETH();
-    //     assertEq(owner.balance, initialBalance + 1 ether);
-    // }
+        uint256 initialBalance = owner.balance;
+        vm.prank(owner);
+        scatter.withdrawStuckETH();
+        assertEq(owner.balance, initialBalance + 1 ether);
+    }
 
-    // function testWithdrawStuckERC20() public {
-    //     // Send some tokens to the contract
-    //     token.mint(address(scatter), 100e18);
+    function testWithdrawStuckERC20() public {
+        // Send some tokens to the contract
+        token.mint(address(scatter), 100e18);
         
-    //     uint256 initialBalance = token.balanceOf(owner);
-    //     vm.prank(owner);
-    //     scatter.withdrawStuckERC20(address(token));
-    //     assertEq(token.balanceOf(owner), initialBalance + 100e18);
-    // }
+        uint256 initialBalance = token.balanceOf(owner);
+        vm.prank(owner);
+        scatter.withdrawStuckERC20(address(token));
+        assertEq(token.balanceOf(owner), initialBalance + 100e18);
+    }
 
-    // function testWithdrawStuckERC1155() public {
-    //     // Send some tokens to the contract
-    //     token1155.mint(address(scatter), 1, 50);
+    function testWithdrawStuckERC1155() public {
+        // Send some tokens to the contract
+        token1155.mint(address(scatter), 1, 50);
         
-    //     uint256 initialBalance = token1155.balanceOf(owner, 1);
-    //     vm.prank(owner);
-    //     scatter.withdrawStuckERC1155(address(token1155), 1);
-    //     assertEq(token1155.balanceOf(owner, 1), initialBalance + 50);
-    // }
+        uint256 initialBalance = token1155.balanceOf(owner, 1);
+        vm.prank(owner);
+        scatter.withdrawStuckERC1155(address(token1155), 1);
+        assertEq(token1155.balanceOf(owner, 1), initialBalance + 50);
+    }
 
     function testPauseUnpause() public {
         vm.startPrank(owner);
