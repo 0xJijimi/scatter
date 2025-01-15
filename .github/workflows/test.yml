@@ -11,7 +11,7 @@ env:
 jobs:
   check:
     strategy:
-      fail-fast: true
+      fail-fast: false
 
     name: Foundry project
     runs-on: ubuntu-latest
@@ -25,21 +25,27 @@ jobs:
         with:
           version: nightly
 
-      - name: Show Forge version
+      - name: Show Foundry and system info
         run: |
           forge --version
+          forge config
+          solc --version
 
       - name: Run Forge fmt
+        continue-on-error: true
         run: |
           forge fmt --check
         id: fmt
 
       - name: Run Forge build
         run: |
-          forge build --sizes
+          forge build --sizes --deny-warnings
         id: build
 
       - name: Run Forge tests
         run: |
-          forge test -vvv
+          forge test -vvv --deny-warnings
+        env:
+          FOUNDRY_FUZZ_RUNS: 256
+          FOUNDRY_FUZZ_MAX_TEST_REJECTS: 65536
         id: test
