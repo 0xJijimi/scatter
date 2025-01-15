@@ -10,7 +10,11 @@ import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
 /// @title Scatter
 /// @notice A contract for distributing native currency, ERC20, and ERC1155 tokens to multiple recipients
-/// @dev Uses ReentrancyGuardTransient for protection against reentrancy attacks
+/// @dev Implements multiple security features:
+///      - ReentrancyGuardTransient: Prevents reentrant calls during token distributions
+///      - Ownable: Restricts admin functions to the contract owner
+///      - Pausable: Allows emergency pause of all distribution functions
+///      - ERC1155Holder: Enables the contract to receive ERC1155 tokens to be able to withdraw stuck tokens
 contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     // Events emitted when tokens are scattered
     event NativeCurrencyScattered(address indexed sender, address[] recipients, uint256[] amounts);
@@ -36,6 +40,8 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     constructor() Ownable(msg.sender) {}
 
     /// @notice Distributes native currency to multiple recipients
+    /// @dev Validates input arrays, calculates total amount needed, transfers ETH to each recipient,
+    ///      and returns any excess ETH to the sender. Prevents reentrancy and can be paused.
     /// @param recipients Array of recipient addresses
     /// @param amounts Array of amounts to send to each recipient
     function scatterNativeCurrency(address[] memory recipients, uint256[] memory amounts) external payable nonReentrant whenNotPaused {
@@ -69,6 +75,9 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     }
 
     /// @notice Distributes ERC20 tokens to multiple recipients
+    /// @dev Uses transferFrom to move tokens directly from sender to recipients.
+    ///      Requires prior approval from sender. Returns any excess tokens that may have been
+    ///      directly transferred to the contract. Prevents reentrancy and can be paused.
     /// @param token Address of the ERC20 token contract
     /// @param recipients Array of recipient addresses
     /// @param amounts Array of token amounts to send to each recipient
@@ -101,6 +110,9 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     }
 
     /// @notice Distributes ERC1155 tokens to multiple recipients
+    /// @dev Optimizes for gas by using batch transfer when there's only one recipient.
+    ///      For multiple recipients, performs individual transfers. Requires prior approval
+    ///      from sender. Prevents reentrancy and can be paused.
     /// @param token Address of the ERC1155 token contract
     /// @param recipients Array of recipient addresses
     /// @param amounts Array of token amounts to send to each recipient
@@ -139,7 +151,8 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     }
 
     /// @notice Allows owner to withdraw any ETH accidentally sent to the contract
-    /// @dev This is a safety function in case ETH gets stuck in the contract
+    /// @dev Safety function to recover ETH. Only callable by contract owner.
+    ///      Transfers entire contract ETH balance to owner.
     function withdrawStuckETH() external onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, NoETHToWithdraw());
@@ -148,6 +161,8 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     }
 
     /// @notice Allows owner to withdraw any ERC20 tokens accidentally sent to the contract
+    /// @dev Safety function to recover ERC20 tokens. Only callable by contract owner.
+    ///      Transfers entire token balance to owner.
     /// @param token Address of the ERC20 token contract to withdraw
     function withdrawStuckERC20(address token) external onlyOwner {
         uint256 balance = IERC20(token).balanceOf(address(this));
@@ -156,6 +171,8 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     }
 
     /// @notice Allows owner to withdraw any ERC1155 tokens accidentally sent to the contract
+    /// @dev Safety function to recover a single ERC1155 token. Only callable by contract owner.
+    ///      Transfers entire token balance to owner.
     /// @param token Address of the ERC1155 token contract
     /// @param id ID of the token to withdraw
     function withdrawStuckERC1155(address token, uint256 id) external onlyOwner {
@@ -171,6 +188,9 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     }
 
     /// @notice Allows owner to withdraw multiple ERC1155 tokens in a single transaction
+    /// @dev Safety function to recover multiple ERC1155 tokens in one transaction.
+    ///      Only callable by contract owner. Checks if at least one token has positive balance
+    ///      before attempting withdrawal.
     /// @param token Address of the ERC1155 token contract
     /// @param ids Array of token IDs to withdraw
     function withdrawStuckERC1155Batch(
@@ -196,14 +216,19 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     }
 
     /// @notice Allows the contract to receive ETH
+    /// @dev Required for contract to receive ETH transfers and refunds
     receive() external payable {}
 
     /// @notice Pauses all token scattering operations
+    /// @dev Emergency function to pause all scatter operations.
+    ///      Only callable by contract owner.
     function pause() external onlyOwner {
         _pause();
     }
 
     /// @notice Unpauses all token scattering operations
+    /// @dev Resumes scatter operations after emergency pause.
+    ///      Only callable by contract owner.
     function unpause() external onlyOwner {
         _unpause();
     }
