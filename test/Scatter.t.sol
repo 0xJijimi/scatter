@@ -234,5 +234,69 @@ contract ScatterTest is Test, ERC1155Holder {
         scatter.scatterERC20Token(address(token), recipients, amounts);
     }
 
+    function testScatterNativeCurrencyWithExcess() public {
+        address[] memory recipients = new address[](2);
+        recipients[0] = bob;
+        recipients[1] = charlie;
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = 1 ether;
+        amounts[1] = 2 ether;
+
+        uint256 excessAmount = 1 ether;
+        uint256 totalSent = 4 ether; // 3 ether needed + 1 ether excess
+        uint256 senderInitialBalance = address(this).balance;
+
+        scatter.scatterNativeCurrency{value: totalSent}(recipients, amounts);
+
+        // Check that excess was returned
+        assertEq(address(this).balance, senderInitialBalance - (totalSent - excessAmount));
+    }
+
+    function testScatterERC20WithExcess() public {
+        vm.startPrank(alice);
+        
+        address[] memory recipients = new address[](2);
+        recipients[0] = bob;
+        recipients[1] = charlie;
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = 100e18;
+        amounts[1] = 200e18;
+
+        uint256 approvalAmount = 400e18; // 100e18 excess
+        token.approve(address(scatter), approvalAmount);
+        
+        uint256 aliceInitialBalance = token.balanceOf(alice);
+        scatter.scatterERC20Token(address(token), recipients, amounts);
+
+        // Check that only the necessary amount was transferred
+        assertEq(token.balanceOf(alice), aliceInitialBalance - 300e18);
+        
+        vm.stopPrank();
+    }
+
+    function testScatterERC1155WithExcess() public {
+        vm.startPrank(alice);
+        
+        address[] memory recipients = new address[](1);
+        recipients[0] = bob;
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 50;
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = 1;
+
+        uint256 aliceInitialBalance = token1155.balanceOf(alice, 1);
+        token1155.setApprovalForAll(address(scatter), true);
+        scatter.scatterERC1155Token(address(token1155), recipients, amounts, ids);
+
+        // Check that only the necessary amount was transferred
+        assertEq(token1155.balanceOf(alice, 1), aliceInitialBalance - 50);
+        
+        vm.stopPrank();
+    }
+
     receive() external payable {}
 } 
