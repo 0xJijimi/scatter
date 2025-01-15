@@ -194,6 +194,9 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable {
         );
     }
 
+    /// @notice Allows the contract to receive ETH
+    receive() external payable {}
+
     /// @notice Pauses all token scattering operations
     function pause() external onlyOwner {
         _pause();
