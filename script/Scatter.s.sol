@@ -8,7 +8,7 @@ contract DeployScatter is Script {
     function run() external returns (Scatter) {
         // Retrieve deployer's private key from environment
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        
+
         // Start broadcasting transactions
         vm.startBroadcast(deployerPrivateKey);
 

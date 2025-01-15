@@ -19,7 +19,9 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     // Events emitted when tokens are scattered
     event NativeCurrencyScattered(address indexed sender, address[] recipients, uint256[] amounts);
     event ERC20Scattered(address indexed sender, address indexed token, address[] recipients, uint256[] amounts);
-    event ERC1155Scattered(address indexed sender, address indexed token, address[] recipients, uint256[] ids, uint256[] amounts);
+    event ERC1155Scattered(
+        address indexed sender, address indexed token, address[] recipients, uint256[] ids, uint256[] amounts
+    );
 
     // Custom errors for better gas efficiency and clearer error messages
     error ArrayLengthMismatch();
@@ -44,10 +46,15 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     ///      and returns any excess ETH to the sender. Prevents reentrancy and can be paused.
     /// @param recipients Array of recipient addresses
     /// @param amounts Array of amounts to send to each recipient
-    function scatterNativeCurrency(address[] memory recipients, uint256[] memory amounts) external payable nonReentrant whenNotPaused {
+    function scatterNativeCurrency(address[] memory recipients, uint256[] memory amounts)
+        external
+        payable
+        nonReentrant
+        whenNotPaused
+    {
         require(recipients.length == amounts.length, ArrayLengthMismatch());
         require(recipients.length > 0, ArrayLengthMismatch());
-        
+
         // Calculate total amount needed
         uint256 totalAmount;
         for (uint256 i = 0; i < amounts.length; i++) {
@@ -59,18 +66,18 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
         for (uint256 i = 0; i < recipients.length; i++) {
             require(recipients[i] != address(0), ZeroAddress());
             require(amounts[i] > 0, ZeroAmount());
-            
+
             payable(recipients[i]).transfer(amounts[i]);
             totalNativeScattered += amounts[i];
         }
-        
+
         // Return excess ETH if any
         uint256 excess = msg.value - totalAmount;
         if (excess > 0) {
-            (bool success, ) = payable(msg.sender).call{value: excess}("");
+            (bool success,) = payable(msg.sender).call{value: excess}("");
             require(success, ETHTransferFailed());
         }
-        
+
         emit NativeCurrencyScattered(msg.sender, recipients, amounts);
     }
 
@@ -81,7 +88,11 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     /// @param token Address of the ERC20 token contract
     /// @param recipients Array of recipient addresses
     /// @param amounts Array of token amounts to send to each recipient
-    function scatterERC20Token(address token, address[] memory recipients, uint256[] memory amounts) external nonReentrant whenNotPaused {
+    function scatterERC20Token(address token, address[] memory recipients, uint256[] memory amounts)
+        external
+        nonReentrant
+        whenNotPaused
+    {
         require(recipients.length == amounts.length, ArrayLengthMismatch());
         require(recipients.length > 0, ArrayLengthMismatch());
         require(token != address(0), ZeroAddress());
@@ -95,7 +106,7 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
         for (uint256 i = 0; i < recipients.length; i++) {
             require(recipients[i] != address(0), ZeroAddress());
             require(amounts[i] > 0, ZeroAmount());
-            
+
             IERC20(token).transferFrom(msg.sender, recipients[i], amounts[i]);
             totalTokenScattered[token] += amounts[i];
         }
@@ -105,7 +116,7 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
         if (contractBalance > 0) {
             require(IERC20(token).transfer(msg.sender, contractBalance), TokenTransferFailed());
         }
-        
+
         emit ERC20Scattered(msg.sender, token, recipients, amounts);
     }
 
@@ -141,12 +152,12 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
             for (uint256 i = 0; i < recipients.length; i++) {
                 require(recipients[i] != address(0), ZeroAddress());
                 require(amounts[i] > 0, ZeroAmount());
-                
+
                 IERC1155(token).safeTransferFrom(msg.sender, recipients[i], ids[i], amounts[i], "");
                 totalERC1155Scattered[token][ids[i]] += amounts[i];
             }
         }
-        
+
         emit ERC1155Scattered(msg.sender, token, recipients, ids, amounts);
     }
 
@@ -156,7 +167,7 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     function withdrawStuckETH() external onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, NoETHToWithdraw());
-        (bool success, ) = payable(owner()).call{value: balance}("");
+        (bool success,) = payable(owner()).call{value: balance}("");
         require(success, ETHTransferFailed());
     }
 
@@ -178,13 +189,7 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     function withdrawStuckERC1155(address token, uint256 id) external onlyOwner {
         uint256 balance = IERC1155(token).balanceOf(address(this), id);
         require(balance > 0, NoTokensToWithdraw());
-        IERC1155(token).safeTransferFrom(
-            address(this),
-            owner(),
-            id,
-            balance,
-            ""
-        );
+        IERC1155(token).safeTransferFrom(address(this), owner(), id, balance, "");
     }
 
     /// @notice Allows owner to withdraw multiple ERC1155 tokens in a single transaction
@@ -193,26 +198,17 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     ///      before attempting withdrawal.
     /// @param token Address of the ERC1155 token contract
     /// @param ids Array of token IDs to withdraw
-    function withdrawStuckERC1155Batch(
-        address token,
-        uint256[] calldata ids
-    ) external onlyOwner {
+    function withdrawStuckERC1155Batch(address token, uint256[] calldata ids) external onlyOwner {
         uint256[] memory balances = new uint256[](ids.length);
         bool hasTokens = false;
-        
+
         for (uint256 i = 0; i < ids.length; i++) {
             balances[i] = IERC1155(token).balanceOf(address(this), ids[i]);
             if (balances[i] > 0) hasTokens = true;
         }
-        
+
         require(hasTokens, NoTokensToWithdraw());
-        IERC1155(token).safeBatchTransferFrom(
-            address(this),
-            owner(),
-            ids,
-            balances,
-            ""
-        );
+        IERC1155(token).safeBatchTransferFrom(address(this), owner(), ids, balances, "");
     }
 
     /// @notice Allows the contract to receive ETH

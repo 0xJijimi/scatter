@@ -11,28 +11,28 @@ contract ScatterTest is Test, ERC1155Holder {
     Scatter public scatter;
     MockERC20 public token;
     MockERC1155 public token1155;
-    
+
     address public owner;
     address public alice;
     address public bob;
     address public charlie;
-    
+
     function setUp() public {
         owner = makeAddr("owner");
         alice = makeAddr("alice");
         bob = makeAddr("bob");
         charlie = makeAddr("charlie");
-        
+
         vm.startPrank(owner);
         scatter = new Scatter();
         token = new MockERC20();
         token1155 = new MockERC1155();
         vm.stopPrank();
-        
+
         // Fund test addresses
         vm.deal(owner, 100 ether);
         vm.deal(alice, 100 ether);
-        
+
         // Mint tokens for testing
         token.mint(alice, 1000e18);
         token1155.mint(alice, 1, 100);
@@ -65,7 +65,7 @@ contract ScatterTest is Test, ERC1155Holder {
 
     function testScatterERC20() public {
         vm.startPrank(alice);
-        
+
         address[] memory recipients = new address[](2);
         recipients[0] = bob;
         recipients[1] = charlie;
@@ -80,13 +80,13 @@ contract ScatterTest is Test, ERC1155Holder {
         assertEq(token.balanceOf(bob), 100e18);
         assertEq(token.balanceOf(charlie), 200e18);
         assertEq(scatter.totalTokenScattered(address(token)), 300e18);
-        
+
         vm.stopPrank();
     }
 
     function testScatterERC1155Single() public {
         vm.startPrank(alice);
-        
+
         address[] memory recipients = new address[](1);
         recipients[0] = bob;
 
@@ -101,13 +101,13 @@ contract ScatterTest is Test, ERC1155Holder {
 
         assertEq(token1155.balanceOf(bob, 1), 50);
         assertEq(scatter.totalERC1155Scattered(address(token1155), 1), 50);
-        
+
         vm.stopPrank();
     }
 
     function testScatterERC1155Multiple() public {
         vm.startPrank(alice);
-        
+
         address[] memory recipients = new address[](2);
         recipients[0] = bob;
         recipients[1] = charlie;
@@ -125,7 +125,7 @@ contract ScatterTest is Test, ERC1155Holder {
 
         assertEq(token1155.balanceOf(bob, 1), 30);
         assertEq(token1155.balanceOf(charlie, 2), 20);
-        
+
         vm.stopPrank();
     }
 
@@ -163,7 +163,7 @@ contract ScatterTest is Test, ERC1155Holder {
     function testWithdrawStuckERC20() public {
         // Send some tokens to the contract
         token.mint(address(scatter), 100e18);
-        
+
         uint256 initialBalance = token.balanceOf(owner);
         vm.prank(owner);
         scatter.withdrawStuckERC20(address(token));
@@ -173,7 +173,7 @@ contract ScatterTest is Test, ERC1155Holder {
     function testWithdrawStuckERC1155() public {
         // Send some tokens to the contract
         token1155.mint(address(scatter), 1, 50);
-        
+
         uint256 initialBalance = token1155.balanceOf(owner, 1);
         vm.prank(owner);
         scatter.withdrawStuckERC1155(address(token1155), 1);
@@ -182,15 +182,15 @@ contract ScatterTest is Test, ERC1155Holder {
 
     function testPauseUnpause() public {
         vm.startPrank(owner);
-        
+
         // Test pausing
         scatter.pause();
         assertTrue(scatter.paused());
-        
+
         // Test unpausing
         scatter.unpause();
         assertFalse(scatter.paused());
-        
+
         vm.stopPrank();
     }
 
@@ -205,30 +205,30 @@ contract ScatterTest is Test, ERC1155Holder {
         recipients[0] = bob;
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = 1 ether;
-        
+
         // Pause the contract
         vm.prank(owner);
         scatter.pause();
-        
+
         // Try to scatter while paused (should fail)
         scatter.scatterNativeCurrency{value: 1 ether}(recipients, amounts);
     }
 
     function testFailERC20ScatterWhilePaused() public {
         vm.startPrank(alice);
-        
+
         address[] memory recipients = new address[](1);
         recipients[0] = bob;
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = 100e18;
-        
+
         token.approve(address(scatter), 100e18);
-        
+
         // Pause the contract
         vm.stopPrank();
         vm.prank(owner);
         scatter.pause();
-        
+
         // Try to scatter while paused (should fail)
         vm.prank(alice);
         scatter.scatterERC20Token(address(token), recipients, amounts);
@@ -255,7 +255,7 @@ contract ScatterTest is Test, ERC1155Holder {
 
     function testScatterERC20WithExcess() public {
         vm.startPrank(alice);
-        
+
         address[] memory recipients = new address[](2);
         recipients[0] = bob;
         recipients[1] = charlie;
@@ -266,19 +266,19 @@ contract ScatterTest is Test, ERC1155Holder {
 
         uint256 approvalAmount = 400e18; // 100e18 excess
         token.approve(address(scatter), approvalAmount);
-        
+
         uint256 aliceInitialBalance = token.balanceOf(alice);
         scatter.scatterERC20Token(address(token), recipients, amounts);
 
         // Check that only the necessary amount was transferred
         assertEq(token.balanceOf(alice), aliceInitialBalance - 300e18);
-        
+
         vm.stopPrank();
     }
 
     function testScatterERC1155WithExcess() public {
         vm.startPrank(alice);
-        
+
         address[] memory recipients = new address[](1);
         recipients[0] = bob;
 
@@ -294,9 +294,9 @@ contract ScatterTest is Test, ERC1155Holder {
 
         // Check that only the necessary amount was transferred
         assertEq(token1155.balanceOf(alice, 1), aliceInitialBalance - 50);
-        
+
         vm.stopPrank();
     }
 
     receive() external payable {}
-} 
+}
