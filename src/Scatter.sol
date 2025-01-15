@@ -6,11 +6,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
 /// @title Scatter
 /// @notice A contract for distributing native currency, ERC20, and ERC1155 tokens to multiple recipients
 /// @dev Uses ReentrancyGuardTransient for protection against reentrancy attacks
-contract Scatter is ReentrancyGuardTransient, Ownable, Pausable {
+contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     // Events emitted when tokens are scattered
     event NativeCurrencyScattered(address indexed sender, address[] recipients, uint256[] amounts);
     event ERC20Scattered(address indexed sender, address indexed token, address[] recipients, uint256[] amounts);
