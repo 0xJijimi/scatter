@@ -46,7 +46,7 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     ///      and returns any excess ETH to the sender. Prevents reentrancy and can be paused.
     /// @param recipients Array of recipient addresses
     /// @param amounts Array of amounts to send to each recipient
-    function scatterNativeCurrency(address[] memory recipients, uint256[] memory amounts)
+    function scatterNativeCurrency(address[] calldata recipients, uint256[] calldata amounts)
         external
         payable
         nonReentrant
@@ -88,7 +88,7 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     /// @param token Address of the ERC20 token contract
     /// @param recipients Array of recipient addresses
     /// @param amounts Array of token amounts to send to each recipient
-    function scatterERC20Token(address token, address[] memory recipients, uint256[] memory amounts)
+    function scatterERC20Token(address token, address[] calldata recipients, uint256[] calldata amounts)
         external
         nonReentrant
         whenNotPaused
@@ -130,9 +130,9 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     /// @param ids Array of token IDs to send to each recipient
     function scatterERC1155Token(
         address token,
-        address[] memory recipients,
-        uint256[] memory amounts,
-        uint256[] memory ids
+        address[] calldata recipients,
+        uint256[] calldata amounts,
+        uint256[] calldata ids
     ) external nonReentrant whenNotPaused {
         require(recipients.length == amounts.length && recipients.length == ids.length, ArrayLengthMismatch());
         require(recipients.length > 0, ArrayLengthMismatch());
