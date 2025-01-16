@@ -10,8 +10,12 @@ import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
 /// @title Scatter
 /// @notice A contract for distributing native currency, ERC20, and ERC1155 tokens to multiple recipients
-/// @dev Implements multiple security features:
-///      - ReentrancyGuardTransient: Prevents reentrant calls during token distributions
+/// @dev Implements multiple security features and gas optimizations:
+///      - ReentrancyGuardTransient: Uses transient storage for gas-efficient reentrancy protection
+///      - Custom errors: Uses error strings instead of require statements for lower gas costs
+///      - Optimized loops: Uses unchecked increment (++i) for gas savings
+///      - ERC1155 batching: Uses batch transfers when possible to reduce gas costs
+///      - Transfer gas limit: Configurable gas limit for ETH transfers to prevent griefing
 ///      - Ownable: Restricts admin functions to the contract owner
 ///      - Pausable: Allows emergency pause of all distribution functions
 ///      - ERC1155Holder: Enables the contract to receive ERC1155 tokens to be able to withdraw stuck tokens
