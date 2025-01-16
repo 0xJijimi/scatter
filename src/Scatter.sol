@@ -57,13 +57,13 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
 
         // Calculate total amount needed
         uint256 totalAmount;
-        for (uint256 i = 0; i < amounts.length; i++) {
+        for (uint256 i = 0; i < amounts.length; ++i) {
             totalAmount += amounts[i];
         }
         require(msg.value >= totalAmount, InsufficientValue());
 
         // Transfer to each recipient
-        for (uint256 i = 0; i < recipients.length; i++) {
+        for (uint256 i = 0; i < recipients.length; ++i) {
             require(recipients[i] != address(0), ZeroAddress());
             require(amounts[i] != 0, ZeroAmount());
 
@@ -98,12 +98,12 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
         require(token != address(0), ZeroAddress());
 
         uint256 totalAmount;
-        for (uint256 i = 0; i < amounts.length; i++) {
+        for (uint256 i = 0; i < amounts.length; ++i) {
             totalAmount += amounts[i];
         }
 
         // Transfer tokens from sender to recipients
-        for (uint256 i = 0; i < recipients.length; i++) {
+        for (uint256 i = 0; i < recipients.length; ++i) {
             require(recipients[i] != address(0), ZeroAddress());
             require(amounts[i] != 0, ZeroAmount());
 
@@ -144,12 +144,12 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
             require(amounts[0] != 0, ZeroAmount());
 
             IERC1155(token).safeBatchTransferFrom(msg.sender, recipients[0], ids, amounts, "");
-            for (uint256 i = 0; i < ids.length; i++) {
+            for (uint256 i = 0; i < ids.length; ++i) {
                 totalERC1155Scattered[token][ids[i]] += amounts[i];
             }
         } else {
             // Multiple recipients - transfer tokens individually
-            for (uint256 i = 0; i < recipients.length; i++) {
+            for (uint256 i = 0; i < recipients.length; ++i) {
                 require(recipients[i] != address(0), ZeroAddress());
                 require(amounts[i] != 0, ZeroAmount());
 
@@ -202,7 +202,7 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
         uint256[] memory balances = new uint256[](ids.length);
         bool hasTokens = false;
 
-        for (uint256 i = 0; i < ids.length; i++) {
+        for (uint256 i = 0; i < ids.length; ++i) {
             balances[i] = IERC1155(token).balanceOf(address(this), ids[i]);
             if (balances[i] > 0) hasTokens = true;
         }
