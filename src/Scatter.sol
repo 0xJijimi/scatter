@@ -114,13 +114,13 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
             totalTokenScattered[token] += amounts[i];
         }
 
+        emit ERC20Scattered(msg.sender, token, recipients, amounts);
+
         // Return excess tokens if any were transferred to the contract
         uint256 contractBalance = IERC20(token).balanceOf(address(this));
         if (contractBalance > 0) {
             require(IERC20(token).transfer(msg.sender, contractBalance), TokenTransferFailed());
         }
-
-        emit ERC20Scattered(msg.sender, token, recipients, amounts);
     }
 
     /// @notice Distributes ERC1155 tokens to multiple recipients
