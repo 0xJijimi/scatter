@@ -5,7 +5,10 @@ import {Test, console2} from "lib/forge-std/src/Test.sol";
 import {Scatter} from "../src/Scatter.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {MockERC1155} from "./mocks/MockERC1155.sol";
-import "lib/openzeppelin-contracts/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import {GasConsumingMock} from "./mocks/GasConsumingMock.sol";
+import {RevertingMock} from "./mocks/RevertingMock.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+
 
 contract ScatterTest is Test, ERC1155Holder {
     Scatter public scatter;
@@ -296,6 +299,55 @@ contract ScatterTest is Test, ERC1155Holder {
         assertEq(token1155.balanceOf(alice, 1), aliceInitialBalance - 50);
 
         vm.stopPrank();
+    }
+
+    function testScatterNativeCurrencyWithHighGasConsumer() public {
+        // Deploy a contract that consumes lots of gas in receive
+        GasConsumingMock gasConsumer = new GasConsumingMock();
+        
+        address[] memory recipients = new address[](2);
+        recipients[0] = address(gasConsumer);
+        recipients[1] = alice;
+        
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = 0.1 ether;
+        amounts[1] = 0.1 ether;
+        
+        uint256 aliceInitialBalance = alice.balance;
+        
+        // Should succeed despite high gas consumption in first recipient
+        scatter.scatterNativeCurrency{value: 0.2 ether}(recipients, amounts);
+        
+        // Verify transfers succeeded
+        assertEq(address(gasConsumer).balance, 0.1 ether);
+        assertEq(alice.balance, aliceInitialBalance + 0.1 ether);  // Account for initial balance
+    }
+
+    function testScatterNativeCurrencyWithFailingReceive() public {
+        // Deploy a contract that reverts in receive
+        RevertingMock reverter = new RevertingMock();
+        
+        address[] memory recipients = new address[](1);
+        recipients[0] = address(reverter);
+        
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 0.1 ether;
+        
+        // Should revert when trying to send to reverting contract
+        vm.expectRevert(Scatter.ETHTransferFailed.selector);
+        scatter.scatterNativeCurrency{value: 0.1 ether}(recipients, amounts);
+    }
+
+    function testFailSetTransferGasLimitNonOwner() public {
+        vm.prank(alice);
+        scatter.setTransferGasLimit(100000);
+    }
+
+    function testSetTransferGasLimitOwner() public {
+        uint256 newLimit = 100000;
+        vm.prank(owner);
+        scatter.setTransferGasLimit(newLimit);
+        assertEq(scatter.transferGasLimit(), newLimit);
     }
 
     receive() external payable {}

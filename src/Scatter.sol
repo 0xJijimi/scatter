@@ -22,6 +22,7 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     event ERC1155Scattered(
         address indexed sender, address indexed token, address[] recipients, uint256[] ids, uint256[] amounts
     );
+    event TransferGasLimitUpdated(uint256 oldLimit, uint256 newLimit);
 
     // Custom errors for better gas efficiency and clearer error messages
     error ArrayLengthMismatch();
@@ -34,10 +35,11 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     error TokenTransferFailed();
     error ERC1155TransferFailed();
 
-    // State variables to track total amounts scattered
+    // State variables
     mapping(address => uint256) public totalTokenScattered;
     mapping(address => mapping(uint256 => uint256)) public totalERC1155Scattered;
     uint256 public totalNativeScattered;
+    uint256 public transferGasLimit = 50000;    
 
     constructor() Ownable(msg.sender) {}
 
@@ -67,7 +69,8 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
             require(recipients[i] != address(0), ZeroAddress());
             require(amounts[i] != 0, ZeroAmount());
 
-            payable(recipients[i]).transfer(amounts[i]);
+            (bool success,) = recipients[i].call{value: amounts[i], gas: transferGasLimit}("");
+            require(success, ETHTransferFailed());
             totalNativeScattered += amounts[i];
         }
 
@@ -227,5 +230,14 @@ contract Scatter is ReentrancyGuardTransient, Ownable, Pausable, ERC1155Holder {
     ///      Only callable by contract owner.
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    /// @notice Adds a new setter function
+    /// @dev Allows the owner to update the transfer gas limit
+    /// @param newLimit The new transfer gas limit
+    function setTransferGasLimit(uint256 newLimit) external onlyOwner {
+        uint256 oldLimit = transferGasLimit;
+        transferGasLimit = newLimit;
+        emit TransferGasLimitUpdated(oldLimit, newLimit);
     }
 }
