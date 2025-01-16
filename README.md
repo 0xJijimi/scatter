@@ -31,17 +31,36 @@ Scatter is a smart contract that enables efficient distribution of native curren
 - `withdrawStuckERC1155(address token, uint256 id)`: Withdraw specific ERC1155 tokens
 - `withdrawStuckERC1155Batch(address token, uint256[] ids)`: Batch withdraw ERC1155 tokens
 
+## Directory Structure
+
+```
+scatter/
+├── src/
+│   └── Scatter.sol       # Main contract implementation
+├── test/
+│   ├── Scatter.t.sol     # Main test suite
+│   └── mocks/            # Mock contracts for testing
+│       ├── MockERC20.sol
+│       ├── MockERC1155.sol
+│       ├── RevertingMock.sol
+│       └── GasConsumingMock.sol
+├── script/
+│   └── Scatter.s.sol     # Deployment script
+└── lib/                  # Dependencies
+```
+
 ## Prerequisites
 
 - [Foundry](https://book.getfoundry.sh/getting-started/installation)
 - [Node.js](https://nodejs.org/) (for development tools)
+- [Python](https://www.python.org/) (for security analysis)
 
 ## Installation
 
 1. Clone the repository:
 ```bash
 git clone https://github.com/0xJijimi/scatter.git
-cd scatter-contract
+cd scatter
 ```
 
 2. Install dependencies:
@@ -82,8 +101,8 @@ pip install -r requirements.txt
 3. Install solc compiler:
 ```bash
 pip install solc-select
-solc-select install 0.8.27  # Install specific version
-solc-select use 0.8.27      # Use this version
+solc-select install 0.8.28  # Install specific version
+solc-select use 0.8.28      # Use this version
 ```
 
 4. Run Slither analysis:
