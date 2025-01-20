@@ -121,28 +121,13 @@ slither .
 source .env
 
 # Deploy the contract
-forge script script/Scatter.s.sol:ScatterScript \
-    --rpc-url $RPC_URL \
-    --broadcast \
-    -vvvv \
-    --slow \
-    --ffi
+forge script script/Scatter.s.sol:DeployScatter --rpc-url $MAINNET_RPC_URL --broadcast -vvvv --slow --ffi
 
 # Verify the contract
-forge verify-contract \
-    <DEPLOYED_CONTRACT_ADDRESS> \
-    <CONTRACT_NAME> \
-    --chain-id <CHAIN_ID> \
-    --watch
+forge verify-contract <DEPLOYED_CONTRACT_ADDRESS> <CONTRACT_NAME> --chain-id <CHAIN_ID> --watch
 
 # Deploy AND verify in one command
-forge script script/Scatter.s.sol:ScatterScript \
-    --rpc-url $RPC_URL \
-    --broadcast \
-    --verify \
-    -vvvv \
-    --slow \
-    --ffi
+forge script script/Scatter.s.sol:DeployScatter --rpc-url $MAINNET_RPC_URL --broadcast --verify -vvvv --slow --ffi
 ```
 
 ## Events
