@@ -127,8 +127,15 @@ forge script script/Scatter.s.sol:DeployScatter --rpc-url $MAINNET_RPC_URL --bro
 forge verify-contract <DEPLOYED_CONTRACT_ADDRESS> <CONTRACT_NAME> --chain-id <CHAIN_ID> --watch
 
 # Deploy AND verify in one command
-forge script script/Scatter.s.sol:DeployScatter --rpc-url $MAINNET_RPC_URL --broadcast --verify -vvvv --slow --ffi
+forge script script/Scatter.s.sol:DeployScatter --rpc-url $MAINNET_RPC_URL --broadcast --verify -vvvv --slow --chain <CHAIN_ID> --ffi
 ```
+
+## Deployed Contracts
+
+| Network          | Contract Address                           | Explorer Link |
+|-----------------|-------------------------------------------|---------------|
+| Sonic Mainnet| `0xe907b1f554214129935820fdb8d7e771e1951d67`                           | [View](https://sonicscan.org/address/0xe907b1f554214129935820fdb8d7e771e1951d67) |
+| Sonic Blaze Testnet         | `0xf2fc843b45e999fc37e8f8a35f07af0844d388d8`                           | [View](https://testnet.soniclabs.com/address/0xf2fc843b45e999fc37e8f8a35f07af0844d388d8) 
 
 ## Events
 
