@@ -14,6 +14,10 @@ Scatter is a smart contract that enables efficient distribution of native curren
 - **Gas Optimization**: Special handling for single-recipient ERC1155 transfers
 - **Event Logging**: Detailed events for all token distributions
 
+## Official Frontend
+
+The official frontend for Scatter can be accessed [here](https://scatter.jijimi.online/).
+
 ## Contract Functions
 
 ### Token Distribution
