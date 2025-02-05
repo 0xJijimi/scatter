@@ -132,23 +132,25 @@ contract ScatterTest is Test, ERC1155Holder {
         vm.stopPrank();
     }
 
-    function testFailScatterNativeCurrencyInsufficientValue() public {
+    function test_RevertWhen_InsufficientValue() public {
         address[] memory recipients = new address[](1);
         recipients[0] = bob;
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = 1 ether;
 
+        vm.expectRevert(Scatter.InsufficientValue.selector);
         scatter.scatterNativeCurrency{value: 0.5 ether}(recipients, amounts);
     }
 
-    function testFailZeroAddress() public {
+    function test_RevertWhen_ZeroAddress() public {
         address[] memory recipients = new address[](1);
         recipients[0] = address(0);
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = 1 ether;
 
+        vm.expectRevert(Scatter.ZeroAddress.selector);
         scatter.scatterNativeCurrency{value: 1 ether}(recipients, amounts);
     }
 
@@ -197,12 +199,13 @@ contract ScatterTest is Test, ERC1155Holder {
         vm.stopPrank();
     }
 
-    function testFailPauseNonOwner() public {
+    function test_RevertWhen_PauseNonOwner() public {
         vm.prank(alice);
+        vm.expectRevert("Ownable: caller is not the owner");
         scatter.pause();
     }
 
-    function testFailScatterWhilePaused() public {
+    function test_RevertWhen_ScatterWhilePaused() public {
         // Setup test data
         address[] memory recipients = new address[](1);
         recipients[0] = bob;
@@ -214,10 +217,11 @@ contract ScatterTest is Test, ERC1155Holder {
         scatter.pause();
 
         // Try to scatter while paused (should fail)
+        vm.expectRevert("Pausable: paused");
         scatter.scatterNativeCurrency{value: 1 ether}(recipients, amounts);
     }
 
-    function testFailERC20ScatterWhilePaused() public {
+    function test_RevertWhen_ERC20ScatterWhilePaused() public {
         vm.startPrank(alice);
 
         address[] memory recipients = new address[](1);
@@ -234,6 +238,7 @@ contract ScatterTest is Test, ERC1155Holder {
 
         // Try to scatter while paused (should fail)
         vm.prank(alice);
+        vm.expectRevert("Pausable: paused");
         scatter.scatterERC20Token(address(token), recipients, amounts);
     }
 
@@ -338,8 +343,9 @@ contract ScatterTest is Test, ERC1155Holder {
         scatter.scatterNativeCurrency{value: 0.1 ether}(recipients, amounts);
     }
 
-    function testFailSetTransferGasLimitNonOwner() public {
+    function test_RevertWhen_SetTransferGasLimitNonOwner() public {
         vm.prank(alice);
+        vm.expectRevert("Ownable: caller is not the owner");
         scatter.setTransferGasLimit(100000);
     }
 
