@@ -8,6 +8,8 @@ import {MockERC1155} from "./mocks/MockERC1155.sol";
 import {GasConsumingMock} from "./mocks/GasConsumingMock.sol";
 import {RevertingMock} from "./mocks/RevertingMock.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 
 contract ScatterTest is Test, ERC1155Holder {
@@ -201,7 +203,7 @@ contract ScatterTest is Test, ERC1155Holder {
 
     function test_RevertWhen_PauseNonOwner() public {
         vm.prank(alice);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
         scatter.pause();
     }
 
@@ -217,7 +219,7 @@ contract ScatterTest is Test, ERC1155Holder {
         scatter.pause();
 
         // Try to scatter while paused (should fail)
-        vm.expectRevert("Pausable: paused");
+        vm.expectRevert(Pausable.EnforcedPause.selector);
         scatter.scatterNativeCurrency{value: 1 ether}(recipients, amounts);
     }
 
@@ -238,7 +240,7 @@ contract ScatterTest is Test, ERC1155Holder {
 
         // Try to scatter while paused (should fail)
         vm.prank(alice);
-        vm.expectRevert("Pausable: paused");
+        vm.expectRevert(Pausable.EnforcedPause.selector);
         scatter.scatterERC20Token(address(token), recipients, amounts);
     }
 
@@ -345,7 +347,7 @@ contract ScatterTest is Test, ERC1155Holder {
 
     function test_RevertWhen_SetTransferGasLimitNonOwner() public {
         vm.prank(alice);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
         scatter.setTransferGasLimit(100000);
     }
 
